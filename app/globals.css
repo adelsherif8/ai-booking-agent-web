@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css");
 
 :root {
   --navy: #0b1c2c;
@@ -42,7 +43,7 @@ body {
 .rule { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 18px auto 14px; max-width: 320px; }
 .rule::before, .rule::after { content: ""; height: 1px; flex: 1; background: linear-gradient(90deg, transparent, var(--gold) 60%); }
 .rule::after { background: linear-gradient(270deg, transparent, var(--gold) 60%); }
-.rule span { color: var(--gold); font-size: 13px; letter-spacing: 0.2em; }
+.rule i { color: var(--gold); font-size: 14px; }
 .tagline { color: #c7cfd9; font-size: 15px; margin: 0 auto; max-width: 560px; font-weight: 300; }
 
 .badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 22px; }
@@ -130,6 +131,7 @@ button.reset { background: var(--panel-2); color: var(--muted); border: 1px soli
 }
 .tcard { border: 1px solid var(--line); border-radius: 12px; padding: 12px 13px; margin: 9px 0; background: #fff; }
 .ttool { font-weight: 600; font-size: 14px; margin-bottom: 5px; color: var(--ink); display: flex; align-items: center; gap: 7px; }
+.ttool i { color: var(--gold); width: 18px; text-align: center; }
 .tnum { color: var(--gold); font-variant-numeric: tabular-nums; }
 .targs {
   font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: #6b5a31;
@@ -143,6 +145,7 @@ table.crm { border-collapse: collapse; width: 100%; font-size: 13.5px; font-weig
 table.crm th, table.crm td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
 table.crm th { background: var(--panel-2); font-weight: 600; color: var(--ink); letter-spacing: 0.03em; }
 .crmhead { font-family: "Cormorant Garamond", serif; font-size: 20px; font-weight: 600; margin: 16px 0 8px; color: var(--ink); }
+.crmhead i { color: var(--gold); margin-right: 9px; font-size: 16px; }
 
 .footer { color: #8893a0; font-size: 12px; margin-top: 26px; text-align: center; font-weight: 300; }
 .footer a { color: var(--gold-2); text-decoration: none; }

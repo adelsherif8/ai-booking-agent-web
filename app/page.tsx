@@ -20,16 +20,10 @@ interface AgentResult {
 }
 
 const ICON: Record<string, string> = {
-  search_hotel_info: "🔎",
-  check_availability: "🗓️",
-  reserve_room: "🛎️",
-  save_guest: "📇",
-};
-const LABEL: Record<string, string> = {
-  search_hotel_info: "search_hotel_info",
-  check_availability: "check_availability",
-  reserve_room: "reserve_room",
-  save_guest: "save_guest",
+  search_hotel_info: "fa-solid fa-magnifying-glass",
+  check_availability: "fa-solid fa-calendar-day",
+  reserve_room: "fa-solid fa-bell-concierge",
+  save_guest: "fa-solid fa-address-card",
 };
 
 const EXAMPLES = [
@@ -131,7 +125,7 @@ export default function Home() {
           The Aurelia <span className="amp">Grand Hotel</span> &amp; Spa
         </h1>
         <div className="rule">
-          <span>✦</span>
+          <i className="fa-solid fa-gem" />
         </div>
         <p className="tagline">
           Your personal concierge — ask about rooms, rates, the spa &amp; dining, or reserve a room.
@@ -215,7 +209,8 @@ export default function Home() {
                   last.trace.map((s, i) => (
                     <div className="tcard" key={i}>
                       <div className="ttool">
-                        <span className="tnum">{i + 1}.</span> {ICON[s.tool] || "🛠️"} {LABEL[s.tool] || s.tool}
+                        <span className="tnum">{i + 1}.</span>
+                        <i className={ICON[s.tool] || "fa-solid fa-screwdriver-wrench"} /> {s.tool}
                       </div>
                       <div className="targs">
                         {Object.entries(s.args)
@@ -234,7 +229,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="card">
-          <div className="crmhead">🛎️ Reservations ({reservations.length})</div>
+          <div className="crmhead"><i className="fa-solid fa-bell-concierge" />Reservations ({reservations.length})</div>
           {reservations.length === 0 ? (
             <div className="empty">— no reservations yet —</div>
           ) : (
@@ -259,7 +254,7 @@ export default function Home() {
               </tbody>
             </table>
           )}
-          <div className="crmhead">📇 Guests ({guests.length})</div>
+          <div className="crmhead"><i className="fa-solid fa-address-card" />Guests ({guests.length})</div>
           {guests.length === 0 ? (
             <div className="empty">— no guests yet —</div>
           ) : (

@@ -188,7 +188,7 @@ function composeAnswer(results: Record<string, any>, wantsBooking: boolean, emai
   const book = results["reserve_room"];
   if (book && book.status === "confirmed") {
     parts.push(
-      `✅ Your room is reserved for **${book.slot_label}**. A confirmation was sent to ${book.email} (reservation #${book.confirmation}). We look forward to welcoming you to The Aurelia.`
+      `Your room is reserved for **${book.slot_label}**. A confirmation was sent to ${book.email} (reservation #${book.confirmation}). We look forward to welcoming you to The Aurelia.`
     );
   } else if (wantsBooking && !email) {
     const avail = results["check_availability"] || {};
