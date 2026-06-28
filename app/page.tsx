@@ -134,7 +134,7 @@ export default function Home() {
         <div className="badges">
           {status && (
             <span className={`badge ${status.mock ? "mock" : "live"}`}>
-              {status.mock ? "Demo mode (no API key)" : "Live · OpenAI"}
+              {status.mock ? "Offline (no key set)" : "Live · OpenAI"}
             </span>
           )}
           {status && <span className="badge">model: {status.model}</span>}
@@ -283,7 +283,7 @@ export default function Home() {
       )}
 
       <div className="footer">
-        The Aurelia is a fictional demo hotel · Built with Next.js + OpenAI function calling · Runs in mock mode with no API key.
+        The Aurelia Grand Hotel is a sample business · Built with Next.js + OpenAI function calling, deployed on Vercel.
       </div>
     </div>
   );
