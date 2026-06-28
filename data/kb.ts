@@ -1,48 +1,55 @@
-// Company knowledge base, embedded as data so it bundles cleanly on Vercel
-// (no filesystem reads at runtime). Each doc is split into paragraph chunks by
-// the retriever in lib/kb.ts.
+// Knowledge base for The Aurelia Grand Hotel & Spa, embedded as data so it
+// bundles cleanly on Vercel. Each doc is split into paragraph chunks by the
+// retriever in lib/kb.ts.
 
 export interface KbDoc {
-  source: string; // human label + slug, used as the citation
-  title: string; // heading words are searchable (the word "hours" lives here)
+  source: string; // citation label
+  title: string; // heading words are searchable
   body: string; // paragraphs separated by blank lines
 }
 
 export const KB_DOCS: KbDoc[] = [
   {
-    source: "Refund Policy (refund-policy)",
-    title: "Refund and Cancellation Policy",
-    body: `We offer a 14-day money-back guarantee on all consultation packages. If you are not satisfied within 14 days of your first session, email billing@luminastudio.example for a full refund — no questions asked.
+    source: "Rooms & Rates",
+    title: "Rooms and Rates",
+    body: `The Aurelia offers 180 rooms and suites overlooking the bay. The Deluxe King starts at $280 per night, the Executive Suite at $450 per night, and the Aurelia Penthouse Suite at $900 per night.
 
-Cancellations made more than 24 hours before a booked consultation are free and fully refundable. Cancellations made within 24 hours of the appointment are charged a 50% late-cancellation fee. No-shows are charged in full.
+Every rate includes breakfast for two at Lumière, welcome champagne, and full access to the rooftop infinity pool and spa. Rates are quoted per room, per night, and exclude 12% city tax.
 
-Refunds are processed back to the original payment method within 5–7 business days. Project work that has already been delivered is non-refundable.`,
+Children under 12 stay free in a parent's room. An extra bed can be added to most rooms for $60 per night on request.`,
   },
   {
-    source: "Hours and Location (hours-and-location)",
-    title: "Hours and Location",
-    body: `Lumina Studio is open Monday to Friday, 9:00 AM – 6:00 PM, and Saturday 10:00 AM – 2:00 PM. We are closed on Sundays and public holidays.
+    source: "Reservations & Cancellation Policy",
+    title: "Reservations Cancellation and Refund Policy",
+    body: `Check-in is from 3:00 PM and check-out is by 11:00 AM. Early check-in and late check-out can be arranged with the concierge, subject to availability.
 
-Our office is at 220 Market Street, Suite 5, San Francisco, CA. Consultations can be held in person at the office or remotely over video call — let us know your preference when you book.
+A deposit equal to the first night is taken at the time of booking. Reservations may be cancelled free of charge up to 48 hours before arrival for a full refund of the deposit.
 
-The fastest way to reach a human is hello@luminastudio.example. We typically reply within one business day.`,
+Cancellations within 48 hours of arrival, or no-shows, are charged for the first night. Refunds are returned to the original payment method within 5–7 business days.`,
   },
   {
-    source: "Services and Pricing (services-and-pricing)",
-    title: "Services and Pricing",
-    body: `Lumina Studio helps small businesses with brand design, web design, and AI automation consulting.
+    source: "Amenities & Dining",
+    title: "Amenities Spa Pool and Dining",
+    body: `Guests enjoy a rooftop infinity pool, the two-floor Aurelia Spa, a 24-hour fitness center, and complimentary high-speed Wi-Fi throughout the hotel.
 
-A discovery consultation is a 45-minute session to scope your project. The consultation costs $120, fully credited toward any project you book with us.
+Lumière, our Michelin-starred restaurant, serves breakfast, lunch, and dinner from 6:30 AM to 10:30 PM. The rooftop Sky Bar is open from 4:00 PM until late.
 
-A brand identity package — logo, color system, and brand guidelines — starts at $2,500. Website design and build starts at $4,000, typically 3–5 weeks. AI automation consulting (workflow automation, chatbots, internal tooling) is billed at $150/hour or fixed-bid per project.
-
-We accept all major credit cards and bank transfer. A 50% deposit is required to start project work, with the balance due on delivery.`,
+Valet parking is $45 per night. The hotel is pet-friendly for dogs under 15kg, with a $50 per-stay cleaning fee. A 24-hour concierge can arrange spa treatments, dining, and tickets.`,
   },
   {
-    source: "About (about)",
-    title: "About Lumina Studio",
-    body: `Lumina Studio is a small design and automation studio founded in 2021. We work with founders and small teams who want a polished brand and modern, automated operations without hiring a full in-house team.
+    source: "Location & Getting Here",
+    title: "Location and Getting Here",
+    body: `The Aurelia Grand Hotel & Spa is at 1 Marine Parade, on the waterfront overlooking the bay, a five-minute walk from the old town and the marina.
 
-Every engagement starts with a discovery consultation so we understand your goals before proposing scope. We work with clients worldwide and run most projects remotely.`,
+We are 20 minutes from the international airport. A complimentary chauffeured airport shuttle runs on the hour; private transfers can be booked through the concierge.
+
+For reservations and enquiries, email reservations@aurelia-hotel.example or call the front desk, staffed 24 hours a day.`,
+  },
+  {
+    source: "About The Aurelia",
+    title: "About The Aurelia Grand Hotel",
+    body: `The Aurelia is a five-star landmark that has welcomed guests on the bay since 1924. Restored in 2019, it blends its original Art Deco grandeur with modern comfort.
+
+From the marble lobby to the rooftop pool, every detail is designed for a memorable stay. Our concierge team is here around the clock to make your visit effortless.`,
   },
 ];

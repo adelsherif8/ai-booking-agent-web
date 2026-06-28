@@ -99,12 +99,14 @@ export async function complete(
 // --------------------------------------------------------------------------
 const KB_KEYWORDS = [
   "refund", "policy", "cancel", "hour", "open", "close", "price", "cost",
-  "pricing", "location", "address", "where", "service", "offer", "payment",
-  "how much",
+  "rate", "pricing", "location", "address", "where", "amenit", "spa", "pool",
+  "gym", "wifi", "wi-fi", "parking", "valet", "pet", "dog", "breakfast",
+  "dining", "restaurant", "bar", "airport", "shuttle", "check-in", "check in",
+  "checkout", "check-out", "check out", "deposit", "tax", "how much", "room",
 ];
 const BOOK_KEYWORDS = [
-  "book", "appointment", "schedule", "reserve", "reschedule", "slot",
-  "available", "availability", "when can i come", "set up a time",
+  "book", "reserve", "reservation", "stay", "available", "availability",
+  "vacancy", "vacancies", "nights", "a room for", "check in on", "arrive",
 ];
 const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.-]+/;
 const NAME_RE = /(?:i'?m|my name is|this is|i am|name'?s)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i;
@@ -124,13 +126,17 @@ export function mockComplete(
 ): { message: LlmMessage; usage: Usage } {
   const lower = userText.toLowerCase();
   const wantsInfo = KB_KEYWORDS.some((k) => lower.includes(k));
-  const wantsBooking = BOOK_KEYWORDS.some((k) => lower.includes(k));
+  // Booking intent: an explicit verb, OR mentioning a room/stay together with a
+  // date (e.g. "do you have a room next Friday?").
+  const mentionsRoom = /\b(room|rooms|stay|night|suite)\b/.test(lower);
+  const wantsBooking =
+    BOOK_KEYWORDS.some((k) => lower.includes(k)) || (mentionsRoom && DATE_RE.test(userText));
 
   // Step 1: nothing gathered yet -> fan out the read-only tools.
   if (Object.keys(results).length === 0) {
     const calls: ToolCall[] = [];
     if (wantsInfo || !wantsBooking) {
-      calls.push(mkCall("search_knowledge_base", { query: userText.trim().slice(0, 200) }));
+      calls.push(mkCall("search_hotel_info", { query: userText.trim().slice(0, 200) }));
     }
     if (wantsBooking) {
       const m = DATE_RE.exec(userText);
@@ -149,16 +155,16 @@ export function mockComplete(
   }
 
   const avail = results["check_availability"];
-  const booked = "book_appointment" in results;
+  const booked = "reserve_room" in results;
 
   if (wantsBooking && avail && avail.slots?.length && email && !booked) {
     const slot = avail.slots[0].id;
     const calls = [
-      mkCall("book_appointment", { slot, name: name || "Guest", email }),
-      mkCall("log_lead", {
+      mkCall("reserve_room", { slot, name: name || "Guest", email }),
+      mkCall("save_guest", {
         name: name || "Guest",
         email,
-        notes: `Booked ${slot}. Asked: ${userText.trim().slice(0, 120)}`,
+        notes: `Reserved ${slot}. Asked: ${userText.trim().slice(0, 120)}`,
       }),
     ];
     return { message: { role: "assistant", content: null, tool_calls: calls }, usage: MOCK_USAGE };
@@ -173,16 +179,16 @@ export function mockComplete(
 function composeAnswer(results: Record<string, any>, wantsBooking: boolean, email: string | null): string {
   const parts: string[] = [];
 
-  const kb = results["search_knowledge_base"];
+  const kb = results["search_hotel_info"];
   if (kb && kb.results?.length) {
     const top = kb.results[0];
     parts.push(`${top.text}\n\n_— Source: ${top.source}_`);
   }
 
-  const book = results["book_appointment"];
+  const book = results["reserve_room"];
   if (book && book.status === "confirmed") {
     parts.push(
-      `✅ You're booked for **${book.slot_label}**. A confirmation was sent to ${book.email} (booking #${book.confirmation}).`
+      `✅ Your room is reserved for **${book.slot_label}**. A confirmation was sent to ${book.email} (reservation #${book.confirmation}). We look forward to welcoming you to The Aurelia.`
     );
   } else if (wantsBooking && !email) {
     const avail = results["check_availability"] || {};
@@ -190,12 +196,12 @@ function composeAnswer(results: Record<string, any>, wantsBooking: boolean, emai
     if (slots.length) {
       const listed = slots.slice(0, 4).map((s: any) => `- ${s.label}`).join("\n");
       parts.push(
-        `Here's what's open ${avail.date_label || "soon"}:\n${listed}\n\nTo confirm a slot, reply with your **name and email**.`
+        `We have availability ${avail.date_label || "soon"}:\n${listed}\n\nTo confirm your reservation, may I have your **name and email**?`
       );
     }
   }
 
   return parts.length
     ? parts.join("\n\n")
-    : "I can help with our services, hours, pricing, refund policy, and booking a consultation. What would you like to do?";
+    : "I can help with rooms & rates, amenities, dining, our cancellation policy, and reserving a room. How may I assist you?";
 }

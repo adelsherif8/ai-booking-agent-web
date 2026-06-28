@@ -20,25 +20,28 @@ interface AgentResult {
 }
 
 const ICON: Record<string, string> = {
-  search_knowledge_base: "🔎",
-  check_availability: "📅",
-  book_appointment: "✅",
-  log_lead: "🗂️",
+  search_hotel_info: "🔎",
+  check_availability: "🗓️",
+  reserve_room: "🛎️",
+  save_guest: "📇",
+};
+const LABEL: Record<string, string> = {
+  search_hotel_info: "search_hotel_info",
+  check_availability: "check_availability",
+  reserve_room: "reserve_room",
+  save_guest: "save_guest",
 };
 
 const EXAMPLES = [
-  "Hi! Can I book a consultation next Tuesday? Also, what's your refund policy?",
-  "What are your hours and how much is a consultation?",
-  "Do you build websites? Where are you located?",
-  "I'd like to book Tuesday at 10am — I'm Jane Doe, jane@acme.com",
+  "Do you have a room next Friday? And what's your cancellation policy?",
+  "What are your room rates, and is breakfast included?",
+  "Tell me about the spa, pool and dining. Are you pet-friendly?",
+  "I'd like to reserve a room for Friday — I'm Jane Doe, jane@acme.com",
 ];
 
 // Tiny, safe markdown: escape, then **bold** / _italic_ / newlines.
 function md(text: string): { __html: string } {
-  const esc = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  const esc = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const html = esc
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/_(.+?)_/g, "<em>$1</em>")
@@ -48,19 +51,19 @@ function md(text: string): { __html: string } {
 
 function summarize(tool: string, r: any): string {
   if (!r || typeof r !== "object") return String(r);
-  if (tool === "search_knowledge_base") {
+  if (tool === "search_hotel_info") {
     const rs = r.results || [];
     return rs.length ? `top hit: ${rs[0].source} (score ${rs[0].score})` : "no matching docs";
   }
   if (tool === "check_availability") {
     const s = r.slots || [];
-    return `${s.length} open slot(s): ${s.slice(0, 3).map((x: any) => x.label).join(", ")}`;
+    return `${s.length} night(s) open: ${s.slice(0, 3).map((x: any) => x.label).join(", ")}`;
   }
-  if (tool === "book_appointment") {
-    return r.status === "confirmed" ? `confirmed ${r.slot_label} → #${r.confirmation}` : r.message;
+  if (tool === "reserve_room") {
+    return r.status === "confirmed" ? `reserved ${r.slot_label} → #${r.confirmation}` : r.message;
   }
-  if (tool === "log_lead") {
-    return r.status === "saved" ? `saved lead #${r.lead_id} (${r.email})` : r.message;
+  if (tool === "save_guest") {
+    return r.status === "saved" ? `saved guest #${r.guest_id} (${r.email})` : r.message;
   }
   return JSON.stringify(r);
 }
@@ -117,31 +120,40 @@ export default function Home() {
     setAllSteps([]);
   }
 
-  const bookings = allSteps.filter((s) => s.tool === "book_appointment" && s.result?.status === "confirmed");
-  const leads = allSteps.filter((s) => s.tool === "log_lead" && s.result?.status === "saved");
+  const reservations = allSteps.filter((s) => s.tool === "reserve_room" && s.result?.status === "confirmed");
+  const guests = allSteps.filter((s) => s.tool === "save_guest" && s.result?.status === "saved");
 
   return (
     <div className="wrap">
       <div className="hero">
-        <h1>🛎️ Lumina Studio — AI Front Desk</h1>
-        <p>A tool-calling agent that answers from docs and takes actions — books appointments, logs leads.</p>
+        <div className="eyebrow">Est. 1924 · On the Bay</div>
+        <h1 className="brand">
+          The Aurelia <span className="amp">Grand Hotel</span> &amp; Spa
+        </h1>
+        <div className="rule">
+          <span>✦</span>
+        </div>
+        <p className="tagline">
+          Your personal concierge — ask about rooms, rates, the spa &amp; dining, or reserve a room.
+          This AI books, checks availability and follows up by calling real tools.
+        </p>
         <div className="badges">
           {status && (
             <span className={`badge ${status.mock ? "mock" : "live"}`}>
-              {status.mock ? "🟡 MOCK (no API key — offline demo)" : "🟢 LIVE (OpenAI)"}
+              {status.mock ? "Demo mode (no API key)" : "Live · OpenAI"}
             </span>
           )}
           {status && <span className="badge">model: {status.model}</span>}
-          {status && <span className="badge">{status.langfuse ? "Langfuse on" : "Langfuse off"}</span>}
+          {status && <span className="badge">{status.langfuse ? "Langfuse tracing on" : "Langfuse off"}</span>}
         </div>
       </div>
 
       <div className="tabs">
         <button className={`tab ${tab === "chat" ? "active" : ""}`} onClick={() => setTab("chat")}>
-          Chat
+          Concierge
         </button>
         <button className={`tab ${tab === "crm" ? "active" : ""}`} onClick={() => setTab("crm")}>
-          CRM ({bookings.length + leads.length})
+          Reservations ({reservations.length + guests.length})
         </button>
       </div>
 
@@ -149,7 +161,9 @@ export default function Home() {
         <div className="grid">
           <div className="card chat">
             <div className="messages" ref={scroller}>
-              {chat.length === 0 && <div className="empty">Ask about pricing, hours, or refunds — or book a consultation.</div>}
+              {chat.length === 0 && (
+                <div className="empty">Good day — how may I help with your stay at The Aurelia?</div>
+              )}
               {chat.map((m, i) => (
                 <div key={i} className={`msg ${m.role === "user" ? "user" : "bot"}`}>
                   <div className="bubble" dangerouslySetInnerHTML={md(m.content)} />
@@ -157,7 +171,7 @@ export default function Home() {
               ))}
               {loading && (
                 <div className="msg bot">
-                  <div className="bubble">…thinking & calling tools</div>
+                  <div className="bubble typing">the concierge is checking…</div>
                 </div>
               )}
             </div>
@@ -166,7 +180,7 @@ export default function Home() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send(input)}
-                placeholder="Type a message…"
+                placeholder="Ask the concierge…"
                 autoFocus
               />
               <button className="send" onClick={() => send(input)} disabled={loading}>
@@ -179,14 +193,14 @@ export default function Home() {
             <div className="examples">
               {EXAMPLES.map((ex) => (
                 <button key={ex} className="chip" onClick={() => send(ex)} disabled={loading}>
-                  {ex.length > 42 ? ex.slice(0, 40) + "…" : ex}
+                  {ex.length > 46 ? ex.slice(0, 44) + "…" : ex}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="card">
-            <h3>🔧 Tool calls this turn</h3>
+            <h3>Concierge actions</h3>
             {last ? (
               <>
                 <div className="kpis">
@@ -201,7 +215,7 @@ export default function Home() {
                   last.trace.map((s, i) => (
                     <div className="tcard" key={i}>
                       <div className="ttool">
-                        {i + 1}. {ICON[s.tool] || "🛠️"} {s.tool}
+                        <span className="tnum">{i + 1}.</span> {ICON[s.tool] || "🛠️"} {LABEL[s.tool] || s.tool}
                       </div>
                       <div className="targs">
                         {Object.entries(s.args)
@@ -214,27 +228,27 @@ export default function Home() {
                 )}
               </>
             ) : (
-              <div className="empty">Send a message to see the tools the agent calls.</div>
+              <div className="empty">Send a message to watch the concierge call its tools.</div>
             )}
           </div>
         </div>
       ) : (
         <div className="card">
-          <div className="crmhead">📅 Bookings ({bookings.length})</div>
-          {bookings.length === 0 ? (
-            <div className="empty">— none yet —</div>
+          <div className="crmhead">🛎️ Reservations ({reservations.length})</div>
+          {reservations.length === 0 ? (
+            <div className="empty">— no reservations yet —</div>
           ) : (
             <table className="crm">
               <thead>
                 <tr>
                   <th>confirmation</th>
-                  <th>slot</th>
+                  <th>date</th>
                   <th>name</th>
                   <th>email</th>
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((b, i) => (
+                {reservations.map((b, i) => (
                   <tr key={i}>
                     <td>{b.result.confirmation}</td>
                     <td>{b.result.slot_label}</td>
@@ -245,9 +259,9 @@ export default function Home() {
               </tbody>
             </table>
           )}
-          <div className="crmhead">🗂️ Leads ({leads.length})</div>
-          {leads.length === 0 ? (
-            <div className="empty">— none yet —</div>
+          <div className="crmhead">📇 Guests ({guests.length})</div>
+          {guests.length === 0 ? (
+            <div className="empty">— no guests yet —</div>
           ) : (
             <table className="crm">
               <thead>
@@ -259,9 +273,9 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {leads.map((l, i) => (
+                {guests.map((l, i) => (
                   <tr key={i}>
-                    <td>{l.result.lead_id}</td>
+                    <td>{l.result.guest_id}</td>
                     <td>{l.result.name}</td>
                     <td>{l.result.email}</td>
                     <td>{String(l.args.notes || "")}</td>
@@ -274,7 +288,7 @@ export default function Home() {
       )}
 
       <div className="footer">
-        Built with Next.js + OpenAI function calling. Runs in offline mock mode with no API key.
+        The Aurelia is a fictional demo hotel · Built with Next.js + OpenAI function calling · Runs in mock mode with no API key.
       </div>
     </div>
   );

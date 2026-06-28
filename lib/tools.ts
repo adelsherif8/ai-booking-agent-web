@@ -1,9 +1,9 @@
-// The four tools the agent can call: implementations, OpenAI JSON schemas, and
-// the dispatch map. Each takes plain args (parsed from the model's JSON) and
-// returns a JSON-serializable result fed back into the loop.
+// The four concierge tools the agent can call: implementations, OpenAI JSON
+// schemas, and the dispatch map. Each takes plain args (parsed from the model's
+// JSON) and returns a JSON-serializable result fed back into the loop.
 import OpenAI from "openai";
 
-import { addLead, claimSlot, openSlots, slotWeekday } from "@/lib/db";
+import { addGuest, claimSlot, openSlots, slotWeekday } from "@/lib/db";
 import { search } from "@/lib/kb";
 
 const WEEKDAYS: Record<string, number> = {
@@ -13,13 +13,13 @@ const WEEKDAYS: Record<string, number> = {
 };
 const WD_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-export function search_knowledge_base({ query }: { query?: string }) {
+export function search_hotel_info({ query }: { query?: string }) {
   if (!query || !query.trim()) return { results: [], note: "empty query" };
   return search(query, 3);
 }
 
 export function check_availability({ date }: { date?: string }) {
-  const slots = openSlots(12);
+  const slots = openSlots(14);
   const lower = (date || "").toLowerCase();
   let wanted: number | null = null;
   for (const [word, day] of Object.entries(WEEKDAYS)) {
@@ -34,38 +34,38 @@ export function check_availability({ date }: { date?: string }) {
       return { date_label: `this/next ${WD_FULL[wanted]}`, slots: filt.slice(0, 4) };
     }
   }
-  return { date_label: (date || "").trim() || "the next few days", slots: slots.slice(0, 4) };
+  return { date_label: (date || "").trim() || "the coming nights", slots: slots.slice(0, 4) };
 }
 
-export function book_appointment({ slot, name, email }: { slot?: string; name?: string; email?: string }) {
+export function reserve_room({ slot, name, email }: { slot?: string; name?: string; email?: string }) {
   if (!slot || !name || !email) {
-    return { status: "error", message: "slot, name and email are all required to book." };
+    return { status: "error", message: "a date, name and email are all required to reserve." };
   }
   return claimSlot(slot, name, email);
 }
 
-export function log_lead({ name, email, notes }: { name?: string; email?: string; notes?: string }) {
-  if (!email) return { status: "error", message: "email is required to log a lead." };
-  return addLead(name || "Unknown", email, notes || "");
+export function save_guest({ name, email, notes }: { name?: string; email?: string; notes?: string }) {
+  if (!email) return { status: "error", message: "email is required to save a guest." };
+  return addGuest(name || "Unknown", email, notes || "");
 }
 
 export const DISPATCH: Record<string, (args: any) => any> = {
-  search_knowledge_base,
+  search_hotel_info,
   check_availability,
-  book_appointment,
-  log_lead,
+  reserve_room,
+  save_guest,
 };
 
 export const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
-      name: "search_knowledge_base",
+      name: "search_hotel_info",
       description:
-        "Search the company knowledge base (services, pricing, hours, location, refund/cancellation policy) and return cited snippets. Use this for ANY factual question about the business, then answer citing the source.",
+        "Search the hotel knowledge base (rooms & rates, amenities, spa, dining, parking, pets, check-in/out, cancellation & refund policy, location) and return cited snippets. Use this for ANY factual question about the hotel, then answer citing the source.",
       parameters: {
         type: "object",
-        properties: { query: { type: "string", description: "The user's question or topic." } },
+        properties: { query: { type: "string", description: "The guest's question or topic." } },
         required: ["query"],
         additionalProperties: false,
       },
@@ -76,10 +76,10 @@ export const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     function: {
       name: "check_availability",
       description:
-        "Return open consultation slots. Pass the user's requested day in natural language (e.g. 'next Tuesday') if they gave one.",
+        "Return available room nights (check-in dates). Pass the guest's requested day in natural language (e.g. 'next Friday') if they gave one.",
       parameters: {
         type: "object",
-        properties: { date: { type: "string", description: "Requested day, free text. Optional." } },
+        properties: { date: { type: "string", description: "Requested arrival day, free text. Optional." } },
         required: [],
         additionalProperties: false,
       },
@@ -88,15 +88,15 @@ export const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
-      name: "book_appointment",
+      name: "reserve_room",
       description:
-        "Book a consultation into a specific open slot. Only call this once you have a slot id from check_availability AND the person's name and email.",
+        "Reserve a room for a specific available date. Only call this once you have a date from check_availability AND the guest's name and email.",
       parameters: {
         type: "object",
         properties: {
-          slot: { type: "string", description: "Slot id from check_availability." },
-          name: { type: "string", description: "Person's full name." },
-          email: { type: "string", description: "Person's email address." },
+          slot: { type: "string", description: "Date id from check_availability (YYYY-MM-DD)." },
+          name: { type: "string", description: "Guest's full name." },
+          email: { type: "string", description: "Guest's email address." },
         },
         required: ["slot", "name", "email"],
         additionalProperties: false,
@@ -106,14 +106,14 @@ export const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
-      name: "log_lead",
+      name: "save_guest",
       description:
-        "Save a contact to the CRM. Call this whenever you have a name and email, even if they did not book, so the business can follow up.",
+        "Save a guest contact to the CRM. Call this whenever you have a name and email, even if they did not reserve, so the team can follow up.",
       parameters: {
         type: "object",
         properties: {
-          name: { type: "string", description: "Person's name." },
-          email: { type: "string", description: "Person's email address." },
+          name: { type: "string", description: "Guest's name." },
+          email: { type: "string", description: "Guest's email address." },
           notes: { type: "string", description: "Context: what they asked for." },
         },
         required: ["name", "email"],
